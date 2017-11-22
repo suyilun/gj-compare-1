@@ -6,6 +6,7 @@ import AppLayouts from "./Layout/AppLayouts";
 import { Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
 import { AppContainer } from 'react-hot-loader';
+import {batchActions, enableBatching} from 'redux-batched-actions';
 require("./app.less");
 require("./index.css");
 // require("./index.html");
@@ -27,7 +28,7 @@ require("./index.css");
 const renderApp = Component => {
     if (process.env.NODE_ENV !== "production") {
     ReactDOM.render(
-        <Provider store={createStore(rootReducer, applyMiddleware(thunkMiddleware))}>
+        <Provider store={createStore(enableBatching(rootReducer), applyMiddleware(thunkMiddleware))}>
            <AppContainer>
             <Component />
             </AppContainer>
@@ -35,7 +36,7 @@ const renderApp = Component => {
         document.getElementById("app")
     );}else{
         ReactDOM.render(
-            <Provider store={createStore(rootReducer, applyMiddleware(thunkMiddleware))}>
+            <Provider store={createStore(enableBatching(rootReducer), applyMiddleware(thunkMiddleware))}>
                 <Component />
             </Provider>,
             document.getElementById("app")

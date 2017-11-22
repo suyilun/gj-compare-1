@@ -1,8 +1,16 @@
 import { connect } from 'react-redux'
 import React from 'react';
 import Handle from '../PartOption/handle'
-import { Spin, Row, Col, Input, Radio, Select, Icon, Button, Switch, Table } from 'antd';
+import { Spin, Row, Col, Input, Radio, Select, Icon, Button as AntButton, Switch, Table } from 'antd';
 import classNames from 'classnames/bind';
+import * as Actions from '../../Actions/Actions';
+import PeoplePic from '../PartOption/peoplePic';
+import PeopleTraceList from '../PartOption/PeopleTraceList';
+import OneDayIndex from '../PartOption/oneDayIndexOption';
+import DetailOption from '../PartOption/detailOption';
+import HeatMap from '../HeatMap/HeatMap.js';
+import moment from 'moment';
+// import 'react-vis/dist/style.css';
 // import {
 //     XYPlot,
 //     XAxis,
@@ -14,14 +22,11 @@ import classNames from 'classnames/bind';
 // } from 'react-vis';
 // import CalendarHeatmap from 'react-calendar-heatmap';
 // import Immutable from 'immutable';
-import * as Actions from '../../Actions/Actions';
-import PeoplePic from '../PartOption/peoplePic';
-import PeopleTraceList from '../PartOption/PeopleTraceList';
-import OneDayIndex from '../PartOption/oneDayIndexOption';
-import DetailOption from '../PartOption/detailOption';
-import HeatMap from '../HeatMap/HeatMap.js';
-import moment from 'moment';
-// import 'react-vis/dist/style.css';
+
+import { Classes,Button, EditableText,Intent } from "@blueprintjs/core";
+import { TagInput } from "@blueprintjs/labs";
+import "@blueprintjs/core/dist/blueprint.css";
+import "@blueprintjs/labs/dist/blueprint-labs.css"
 
 const BASELINE_HEIGHT = 35;
 const TOP_HEIGHT = 60;
@@ -29,6 +34,7 @@ const SEARCH_BAR = 40;
 const BOTTOM_HEIGHT = 160;
 const PERSON_ROW_HEIGHT = 120;
 const LEFT_HEIGHT = 116;
+const splitRegex=/[\,\ \;\'\"]+/
 
 const Option = Select.Option;
 // const timestamp = new Date('May 23 2017').getTime();
@@ -347,7 +353,7 @@ class Content extends React.Component {
         });
         this.monthPosition = tempPosition;
         this.dayPosition = tempDayPosition;
-        console.log("%o 转时间monthpositon: %o,dayPosition:%o", timeDataArray, this.monthPosition, this.dayPosition);
+       // console.log("%o 转时间monthpositon: %o,dayPosition:%o", timeDataArray, this.monthPosition, this.dayPosition);
     }
 
     moveTimeScroller = (value) => {
@@ -433,6 +439,45 @@ class Content extends React.Component {
         //console.log("tokenDate", tokenMonth)
     }
 
+
+    handlerSearch=()=>{
+        const {inputValue}=this.refs.tagInput.state;
+        if(inputValue===''){
+            //重新加载    
+        }else{
+            const userNumbers=inputValue.split(splitRegex).filter(item=>{
+                    return item.length!=0;
+                }
+            ); 
+            this.refs.tagInput.setState({inputValue:""}) 
+            // console.log(">>>>>>>>>>>>>>>>>>>>", ReactDOM.findDOMNode(this.refs.tagInput))
+            // ReactDOM.findDOMNode(this.refs.tagInput).value="";
+            //this.refs.tagInput.setAttribute("value","");
+            this.props.addUserNumberArray(userNumbers);
+        }
+      
+       // console.log(this.refs.tagInput.inputProps)
+        console.log("search")
+    }
+
+    getTagProps=(value,index)=>{
+       // var self=this;
+       // console.log("value",value,"index:",index);
+        return {
+            className:Classes.MINIMAL,
+        };
+    }
+
+
+    handlerAdd=(values)=>{
+        this.props.addUserNumberArray(values);
+    }
+    handlerRemove=(values)=>{
+        const sfzh=values.props.children;
+        this.props.deleteUserNumber(sfzh);
+    }
+
+
     componentDidMount() {
         //const { moveTimeScroller } = this.props;
         let self = this;
@@ -451,7 +496,8 @@ class Content extends React.Component {
     render() {
         let { ui, data, showTimeIndex, addUser, showDetailFunc, changeShowChart, changeSameRadioFunc } = this.props;
         console.log("content改变：", this.props);
-        const { loadData, chartData } = data;
+        const { loadData, chartData,filterData } = data;
+        const self=this;
         let height = {};
         const userNumberSize = Object.keys(loadData).length;
         if (ui.Top.showTop) {
@@ -479,10 +525,21 @@ class Content extends React.Component {
         }).map((option) => {
             return option.value
         });
-        const { radioValue, startTime, endTime } = data.filterData;
+        const { radioValue, startTime, endTime ,userNumberArray,userNumberStatus} = filterData;
+        const values=userNumberArray.map((userNumber,idx)=>{
+            if(userNumberStatus[idx]){
+                return (<b>{userNumber}</b>)
+            }
+        });
+       
+        const clearButton = (
+            <Button
+                className={classNames( Classes.INTENT_PRIMARY)}
+                iconName={"search"}
+                onClick={this.handlerSearch}
+            >分析</Button>
+        );
 
-        console.log("height is %o,startTime:%o,endTime:%o", height, moment(startTime, "YYYY-MM-DD").format("YYYYMMDD"),
-        moment(endTime, "YYYY-MM-DD").format("YYYYMMDD"));
         return (
             <Row>
                 <Col span="24">
@@ -507,14 +564,38 @@ class Content extends React.Component {
                         </Spin>
                     </div>
 
-                    {/* <div className="b-left" style={{ height: BOTTOM_HEIGHT }}>
-                     <div style={{ marginTop: 21 }}>
-                     描述
-                     </div>
-                     </div> */}
-
                     <div className="collect">
-                        <Input
+                        <div style={{float:"left",marginLeft:"10px",width:"650px",marginRight:"5px"}}>
+                            <TagInput
+                                //ref={"tagInput"}
+                                ref={(tagInput)=>{self.refs.tagInput=tagInput}}
+                                inputProps={{style:{width:'140px'}}}
+                                className={Classes.FILL}
+                                //rightElement={clearButton}
+                                leftIconName="user"
+                                onAdd={this.handlerAdd}
+                                onRemove={this.handlerRemove}
+                                separator={splitRegex}
+                                //onChange={this.handlerChange}
+                                // onChange={this.handleChange}
+                                placeholder="多个身份证使用逗号分隔"
+                                tagProps={this.getTagProps}
+                                // tagProps={getTagProps}
+                                values={values}
+                            />
+                        </div>
+
+                        {clearButton}
+                      
+                        {/* <AntButton type="primary" icon="search" size="small" onClick={
+                            () => {
+                                // if (!ui.isLoad.isLoadStatus) {
+                                //     addUser(this.refs.userNumberInput.refs.input.value)
+                                // }
+                            }
+                        }>分析</AntButton> */}
+
+                        {/* <Input
                             ref={"userNumberInput"}
                             size="small"
                             placeholder="请输入证件号码"
@@ -524,14 +605,8 @@ class Content extends React.Component {
                                     addUser(e.target.value)
                                 }
                             }}
-                        />
-                        <Button type="primary" icon="search" size="small" onClick={
-                            () => {
-                                if (!ui.isLoad.isLoadStatus) {
-                                    addUser(this.refs.userNumberInput.refs.input.value)
-                                }
-                            }
-                        }>添加</Button>
+                        /> */}
+                      
                         <Radio.Group value={radioValue} onChange={changeSameRadioFunc} style={{ marginLeft: 15 }}>
                             <Radio value={"all"}><b className="all">所有</b></Radio>
                             <Radio value={"sameDay"}><b className="sameDay">同日</b></Radio>
@@ -577,22 +652,22 @@ class Content extends React.Component {
                     <div
                         className="b-right" style={{ overflow: "hidden", height: BOTTOM_HEIGHT }}>
                         <Row gutter={4}>
-                            <Col span={10} style={{ height: BOTTOM_HEIGHT }}>
-                                <TraceTable
-                                    loadData={loadData}
-                                    timeDataArray={timeDataArray}
-                                    showTypes={showTypes}
-                                />
+                            <Col span={16} style={{ overflowY:"hidden",overflowX:"auto" }}>
+                                    <HeatMap
+                                        height={BOTTOM_HEIGHT}
+                                        data={analyseDays}
+                                        startDay={moment(endTime, "YYYY-MM-DD").format("YYYYMMDD")}
+                                        endDay={moment(startTime, "YYYY-MM-DD").format("YYYYMMDD")}
+                                        //titleForDay={() => { }}
+                                        clickForDay={this.clickDayHeatMap}
+                                    />
                             </Col>
-                            <Col span={14} style={{ boxShadow: '-6px 0 6px -4px rgba(0,0,0,.2)',overflowY:"hidden",overflowX:"auto" }}>
-                                <HeatMap
-                                    height={BOTTOM_HEIGHT}
-                                    data={analyseDays}
-                                    startDay={moment(endTime, "YYYY-MM-DD").format("YYYYMMDD")}
-                                    endDay={moment(startTime, "YYYY-MM-DD").format("YYYYMMDD")}
-                                    //titleForDay={() => { }}
-                                    clickForDay={this.clickDayHeatMap}
-                                />
+                            <Col span={8} style={{ height: BOTTOM_HEIGHT,boxShadow: '-6px 0 6px -4px rgba(0,0,0,.2)', }}>
+                                    <TraceTable
+                                        loadData={loadData}
+                                        timeDataArray={timeDataArray}
+                                        showTypes={showTypes}
+                                    />
                             </Col>
                         </Row>
                     </div>
@@ -602,8 +677,9 @@ class Content extends React.Component {
         )
     }
 
-    //时间滚动条
+   
 }
+ //时间滚动条
 //
 //<TraceAnaylse />
 
@@ -623,6 +699,12 @@ function mapDispatchToProps(dispatch) {
         addUser: (value) => {
             dispatch(Actions.loadData(value));
         },
+        addUserNumberArray:(newUserArray)=>{
+            dispatch(Actions.addUserNumberArray(newUserArray));
+        },
+        deleteUserNumber:(userNumer)=>{
+            dispatch(Actions.dataCancel(userNumer));
+        },
         changeShowChart: (value) => {
             dispatch(Actions.changeShowChart(value));
         },
@@ -638,9 +720,9 @@ function mapDispatchToProps(dispatch) {
         changeSameRadioFunc: (e) => {
             dispatch(Actions.changeSameRadio(e.target.value))
         }
+
     }
 }
-
 //<Switch size="small" checked={ui.showChart} onChange={changeShowChart} />
 export default connect(mapStateToProps, mapDispatchToProps
 )(Content)

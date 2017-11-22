@@ -56,7 +56,8 @@ function changeLoadStatus(state, action) {
     //console.log("chngeLoad",action);
     switch (action.type) {
         case ActionTypes.UI.LOADWAIT:
-            return Object.assign({}, state, { isLoadStatus: action.loadStatus })
+            const {loadStatus}=action.payload
+            return Object.assign({}, state, { isLoadStatus: loadStatus })
         default:
             return state
     }

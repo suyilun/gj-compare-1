@@ -4,7 +4,7 @@
  */
 const webpack = require('webpack');
 const path = require('path');
-const { resolve } = require('path');
+// const {resolve} = require('path');
 const OpenBrowserPlugin = require('open-browser-webpack-plugin');
 const LodashModuleReplacementPlugin = require('lodash-webpack-plugin');
 const WebpackBundleSizeAnalyzerPlugin = require('webpack-bundle-size-analyzer').WebpackBundleSizeAnalyzerPlugin;
@@ -58,7 +58,7 @@ const config = {
         // hotOnly:true, 使用hotOnly和hot都可以
         hot: true,
         //stats: 'errors-only', //只在发生错误时输出
-        contentBase: resolve(__dirname, 'build'),
+        contentBase: path.resolve(__dirname, 'build'),
         // host:process.env.Host, undefined
         // port:process.env.PORT, undefined
         overlay: { //当有编译错误或者警告的时候显示一个全屏overlay

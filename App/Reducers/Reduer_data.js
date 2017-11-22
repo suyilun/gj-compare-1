@@ -23,8 +23,10 @@ const initFilter = () => {
     let nowTime = new Date();
     //nowTime.setMonth(nowTime.getMonth()-1);
     return {
-        startTime: date.getFullYear() + "-01-01",
         endTime: moment(nowTime).format('YYYY-MM-DD'),
+        startTime: moment(nowTime).add("month",-12).format('YYYY-MM-DD'),
+        userNumberArray:[],
+        userNumberStatus:[],
         userNumber: '',
         options: TraceCard.typeOptions,
         radioValue: 'all',
@@ -44,7 +46,8 @@ function desc(descInState = { sameDay: {}, sameMd5: {}, date_type: { timeDataArr
 }
 
 function sameMd5Fun(state, action) {
-    const { type, sameMd5 } = action;
+    const { type } = action;
+    const {sameMd5}=action.payload||{};
     switch (type) {
         case ActionTypes.DATA.MD5_COLLECTOR:
         case ActionTypes.DATA.MD5_DELETE:
@@ -55,7 +58,8 @@ function sameMd5Fun(state, action) {
 }
 //同日分析
 function sameDayFun(state, action) {
-    const { type, sameDay } = action;
+    const { type } = action;
+    const {sameDay}=action.payload||{};
     switch (type) {
         case ActionTypes.DATA.DATE_COLLECTOR:
         case ActionTypes.DATA.DATE_DELETE:
@@ -67,7 +71,8 @@ function sameDayFun(state, action) {
 }
 
 function sumCatgFun(state, action) {
-    const { type, sumCatg } = action;
+    const { type } = action;
+    const {sumCatg}=action.payload||{};
     switch (type) {
         case ActionTypes.DATA.SUMCATG_COLLECTOR:
         case ActionTypes.DATA.SUMCATG_DELETE:
@@ -81,8 +86,9 @@ function sumCatgFun(state, action) {
 
 //data_type={身份证:时间数据,timeDataArray:时间轴}
 function date_type(state, action) {
-    const { userNumber, userTimeTypeDataArr, timeDataArray, analyseDays } = action;
-    switch (action.type) {
+    const { type, } = action;
+    const {userNumber, userTimeTypeDataArr, timeDataArray, analyseDays,userDateTypeMap }=action.payload||{};
+    switch (type) {
         case ActionTypes.DATA.DATE_TYPE_COLLECTOR:
             return Object.assign(state, { [userNumber]: userTimeTypeDataArr }, { timeDataArray, analyseDays });
         case ActionTypes.DATA.DATE_TYPE_DELETE:
@@ -93,7 +99,7 @@ function date_type(state, action) {
         case ActionTypes.FILTER.RADIO_CHANGE:
             return Object.assign({}, state, { timeDataArray, analyseDays });
         case ActionTypes.DATA.DATA_DATETYPE_REGET:
-            const { userDateTypeMap } = action;//userDateTypeMap为 身份证：时间类型数组
+            //const {  } = action;//userDateTypeMap为 身份证：时间类型数组
             return Object.assign({}, state, userDateTypeMap, { timeDataArray, analyseDays })
         default: return state;
     }
@@ -102,16 +108,17 @@ function date_type(state, action) {
 //加载原始数据state
 function loadData(loadDataInState = {}, action) {
     const loadDataClone = _.cloneDeep(loadDataInState);
-    switch (action.type) {
+    const {type}=action;
+    const {userData,userNumber,personDataList}=action.payload||{};
+    switch (type) {
         case ActionTypes.DATA.ADD_RECEIVE:
-            loadDataClone[action.userNumber] = action.userData;
+            loadDataClone[userNumber] = userData;
             return loadDataClone;//由ajax添加数据值resource
         case ActionTypes.DATA.DATA_DELETE:
-            delete loadDataClone[action.userNumber];
+            delete loadDataClone[userNumber];
             return loadDataClone;
         case ActionTypes.DATA.DATA_REGET:
             //重新检索数据
-            const { personDataList } = action;
             personDataList.map(personData => {
                 loadDataClone[personData.people.userNumber] = personData;
             })
@@ -123,7 +130,8 @@ function loadData(loadDataInState = {}, action) {
 
 //加载数据时做映射
 function mappings(mappingsInState = {}, action) {
-    const { type, userNumber, userDateMap } = action;
+    const { type,  } = action;
+    const {userNumber, userDateMap,userMappingMap}=action.payload||{};
     switch (type) {
         case ActionTypes.DATA.MAPPING:
             return Object.assign({}, mappingsInState, { [userNumber]: userDateMap });
@@ -132,7 +140,6 @@ function mappings(mappingsInState = {}, action) {
             delete clone[userNumber];
             return clone;
         case ActionTypes.DATA.DATA_MAPPING_REGET:
-            const { userMappingMap } = action;
             return userMappingMap;
         default:
             return mappingsInState;
@@ -140,21 +147,24 @@ function mappings(mappingsInState = {}, action) {
 }
 
 function oneTrackDetail(state = {}, action) {
-    switch (action.type) {
+    const {type}=action;
+    const {detailData}=action.payload||{};
+    switch (type) {
         case ActionTypes.DATA.LOAD_ONETRACK_DETAIL:
-            return Object.assign({}, state, action.detailData);
+            return Object.assign({}, state, detailData);
         default:
             return state;
     }
 }
 
 function chartData(chartDataInState = {}, action) {
-    switch (action.type) {
+    const {type}=action;
+    const { userDateArr, userNumber } =action.payload||{};
+    switch (type) {
         case ActionTypes.CHART.CHART_ADD_DATA:
-            const { userDateArr, userNumber } = action;
             return chartDataInState;
         case ActionTypes.CHART.CHART_DELETE_DATA:
-            delete chartDataInState[action.userNumber];
+            delete chartDataInState[userNumber];
             return chartDataInState;
         default:
             return chartDataInState;
@@ -163,7 +173,9 @@ function chartData(chartDataInState = {}, action) {
 
 //--------------顶部删选--------------------
 const filterData = (filterInState = initFilter(), action) => {
-    switch (action.type) {
+    const {type}=action;
+    const {startTime,endTime,userNumber,radioValue,timeChoose,userNumberArray,userNumberStatus,optValue,optCheck}=action.payload||{};
+    switch (type) {
         case ActionTypes.FILTER.SET_START_TIME:
             return Object.assign({}, filterInState, { startTime: action.startTime });
         case ActionTypes.FILTER.SET_END_TIME:
@@ -172,29 +184,32 @@ const filterData = (filterInState = initFilter(), action) => {
             return Object.assign({}, filterInState, { userNumber: action.userNumber });
         case ActionTypes.OPTION.CHANGE_CHECK:
             const { options } = filterInState;
-            options.map((item) => {
-                if (action.optValue === item.value) {
-                    item.ischeck = action.optCheck;
+            const optionsClone=_.cloneDeep(options);
+            optionsClone.map((item) => {
+                if (optValue === item.value) {
+                    item.ischeck = optCheck;
                 }
             });
-            return Object.assign({}, filterInState, { options });
+            return Object.assign({}, filterInState, { options:optionsClone });
         case ActionTypes.FILTER.RADIO_CHANGE:
-            const { radioValue } = action;
             return Object.assign({}, filterInState, { radioValue });
         case ActionTypes.DATA.CHANGE_TIME_SELECT:
-            const { timeChoose } = action;
             return Object.assign({}, filterInState, { timeChoose });
+        case ActionTypes.DATA.ADD_USER_ARRAY_INPUT:
+            return Object.assign({},filterInState,{userNumberArray,userNumberStatus});
+        case ActionTypes.DATA.DEL_USER_INPUT:
+            return Object.assign({},filterInState,{userNumberArray,userNumberStatus});
         default:
             return filterInState;
     }
 }
 
 function error(errorInState = {}, action) {
-    const { type, errorMsg } = action;
+    const { type,  } = action;
+    const {errorMsg,notifyDesc, notifyMsg }=action.payload||{};
     switch (type) {
         case ActionTypes.DATA.ERROR_MSG: Message.error(errorMsg); return;
         case ActionTypes.DATA.NOTIFY_MSG:
-            const { notifyDesc, notifyMsg } = action;
             notification["warning"]({
                 message: notifyMsg,
                 description: notifyDesc,
@@ -202,6 +217,5 @@ function error(errorInState = {}, action) {
             return;
     }
 }
-
 export default data;
 
