@@ -7,10 +7,14 @@ class Main extends React.Component {
         super(props);
     }
     render() {
+        const {match}=this.props;
+        const {userNumbers}=match.params;
+       // const {userNumbers}=this.props.params;
+        //console.log("userNumbers",userNumbers)
         return (
             <div>
                 <Head key="gj-head"/>
-                <Content key="gj-content"/>
+                <Content key="gj-content" userNumbers={userNumbers}/>
             </div>
         )
     }

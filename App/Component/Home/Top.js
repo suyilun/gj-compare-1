@@ -1,7 +1,9 @@
 import { connect } from 'react-redux'
 import React from 'react';
+import classNames from 'classnames/bind';
 import * as Actions from '../../Actions/Actions';
-import { Row, Col, DatePicker, Button } from 'antd';
+import { Row, Col, DatePicker } from 'antd';
+import { Classes,Button, EditableText,Intent } from "@blueprintjs/core";
 import moment from 'moment';
 moment.locale('zh-cn');
 
@@ -43,6 +45,7 @@ class Head extends React.Component {
                 </Col>
                 <Col span="8">
                     <div className={"searchAgain"}>
+                     <div style={{float:"left",marginRight:"5px"}}>
                         <DatePicker
                             defaultValue={moment(startTime, 'YYYY-MM-DD')}
                             onChange={(date, dateString) => { setStartTime(dateString) }}
@@ -53,7 +56,13 @@ class Head extends React.Component {
                             defaultValue={moment(endTime, 'YYYY-MM-DD')}
                             onChange={(date, dateString) => { setEndTime(dateString) }}
                             allowClear={false} />
-                        <Button icon="user" type="primary" onClick={reGetTraces}>重新比对</Button>
+                       </div> 
+                        <Button
+                            className={classNames( Classes.INTENT_PRIMARY)}
+                            iconName={"pt-icon-refresh"}
+                            onClick={reGetTraces}
+                        >重新比对</Button>
+                      
                     </div>
                 </Col>
             </Row>

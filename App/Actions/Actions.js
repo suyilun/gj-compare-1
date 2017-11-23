@@ -995,16 +995,11 @@ function regetContent(personDataList) {
 
 export function addUserNumberArray(userNumberArray) {
     return (dispatch, getState) => {
-       const userNumberArrayInState= getState().data.filterData.userNumberArray;
-       //判断是否有重复
-       const sameUserNumbers=_.intersection(userNumberArray,userNumberArrayInState);
-       if(sameUserNumbers.length>0){
-           //有重复
-          return   dispatch(errorMsg(`对不起身份证${sameUserNumbers.join(",")}已存在`));
-       } 
+        const userNumberArrayInState= getState().data.filterData.userNumberArray;
         dispatch(batchActions([loadWatiAct()], "addUserNumberArray_loading"));
         ///fwzy/do/track/dataList
-        return axios.get(`/json/${userNumberArray.join(",")}.json`, {
+        ///json/${userNumberArray.join(",")}.json
+        return axios.get(`/fwzy/do/track/dataList`, {
             params: {
                 zjhms: userNumberArray.join(","),
                 kssj: getState()
@@ -1202,7 +1197,7 @@ const calculteSumCatgByAddArray= (getState, userDateTypeMap, sameDay, sameMd5) =
         .map((option) => {
             return option.value
         });
-    const sumCatg = {};
+    const sumCatg = getState().data.desc.sumCatg||{};
     Object
         .keys(userDateTypeMap)
         .map(userNumber => {
@@ -1274,7 +1269,7 @@ const calculteTimeDataArrayByAddArray = (getState, userDateTypeMap, sameDay, sam
 }
 
 
-function errorMsg(errorMsg) {
+export function errorMsg(errorMsg) {
     return {type: ActionTypes.DATA.ERROR_MSG, payload:{errorMsg}}
 }
 

@@ -10,6 +10,7 @@ import OneDayIndex from '../PartOption/oneDayIndexOption';
 import DetailOption from '../PartOption/detailOption';
 import HeatMap from '../HeatMap/HeatMap.js';
 import moment from 'moment';
+import _ from 'lodash';
 // import 'react-vis/dist/style.css';
 // import {
 //     XYPlot,
@@ -22,7 +23,6 @@ import moment from 'moment';
 // } from 'react-vis';
 // import CalendarHeatmap from 'react-calendar-heatmap';
 // import Immutable from 'immutable';
-
 import { Classes,Button, EditableText,Intent } from "@blueprintjs/core";
 import { TagInput } from "@blueprintjs/labs";
 import "@blueprintjs/core/dist/blueprint.css";
@@ -35,7 +35,6 @@ const BOTTOM_HEIGHT = 160;
 const PERSON_ROW_HEIGHT = 120;
 const LEFT_HEIGHT = 116;
 const splitRegex=/[\,\ \;\'\"]+/
-
 const Option = Select.Option;
 // const timestamp = new Date('May 23 2017').getTime();
 // const ONE_DAY = 86400000;
@@ -396,7 +395,7 @@ class Content extends React.Component {
             }
             scrollerWidth += this.monthPosition[month];
         }
-        console.log("changeTimeSelect:", nowMonth, scrollerWidth, this.monthPosition)
+       // console.log("changeTimeSelect:", nowMonth, scrollerWidth, this.monthPosition)
         this.refs.personTraceRef.scrollLeft = scrollerWidth;
         this.refs.timelineRef.scrollLeft = scrollerWidth;
     }
@@ -442,23 +441,46 @@ class Content extends React.Component {
 
     handlerSearch=()=>{
         const {inputValue}=this.refs.tagInput.state;
+        this.handlerUserNumbers(inputValue);
+        //this.refs.tagInput.setState({inputValue:""}) 
+        
+    }
+
+    handlerUserNumbers=(inputValue)=>{
+        const {data, errorMessage} = this.props;
+        const {userNumberArray}=data.filterData;
+        let userNumberError=[];
+        let userNumberMsgError="";
         if(inputValue===''){
             //重新加载    
-        }else{
-            const userNumbers=inputValue.split(splitRegex).filter(item=>{
-                    return item.length!=0;
-                }
-            ); 
-            this.refs.tagInput.setState({inputValue:""}) 
-            // console.log(">>>>>>>>>>>>>>>>>>>>", ReactDOM.findDOMNode(this.refs.tagInput))
-            // ReactDOM.findDOMNode(this.refs.tagInput).value="";
-            //this.refs.tagInput.setAttribute("value","");
-            this.props.addUserNumberArray(userNumbers);
+           errorMessage("请输入身份证");
+           return ;
         }
-      
-       // console.log(this.refs.tagInput.inputProps)
-        console.log("search")
+        const reg = /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/; 
+        const userNumbers=inputValue.split(splitRegex).filter(item=>{
+                return item.length!=0;
+            }
+        ); 
+        for(var i=0;i<userNumbers.length;i++){
+            var itemNumber=userNumbers[i];
+            if(reg.test(itemNumber) === false) {
+                userNumberError.push(itemNumber);  
+            }
+        }
+        if(userNumberError.length>0){
+            errorMessage(`身份证${userNumberError.join(",")}格式有误，请重新输入！`);
+            return;
+        }
+        const sameUserNumbers=_.intersection(userNumbers,userNumberArray);
+        if(sameUserNumbers.length>0){
+                //有重复
+                errorMsg(`对不起身份证${sameUserNumbers.join(",")}已存在`);
+                return ;
+        }
+        this.props.addUserNumberArray(userNumbers);
+        this.refs.tagInput.setState({inputValue:""});
     }
+
 
     getTagProps=(value,index)=>{
        // var self=this;
@@ -480,7 +502,11 @@ class Content extends React.Component {
 
     componentDidMount() {
         //const { moveTimeScroller } = this.props;
-        let self = this;
+        const self = this;
+        const {userNumbers}=this.props;
+        if(userNumbers){
+            this.handlerUserNumbers(userNumbers)
+        }
         this.refs.personsRef.addEventListener('scroll', () => {
             this.refs.personTraceRef.scrollTop = this.refs.personsRef.scrollTop;
         });
@@ -569,7 +595,9 @@ class Content extends React.Component {
                             <TagInput
                                 //ref={"tagInput"}
                                 ref={(tagInput)=>{self.refs.tagInput=tagInput}}
-                                inputProps={{style:{width:'140px'}}}
+                                inputProps={{style:{width:'140px'},handleInputKeyDown:(event)=>{
+                                    //console.log("修改了...");
+                                }}}
                                 className={Classes.FILL}
                                 //rightElement={clearButton}
                                 leftIconName="user"
@@ -577,16 +605,14 @@ class Content extends React.Component {
                                 onRemove={this.handlerRemove}
                                 separator={splitRegex}
                                 //onChange={this.handlerChange}
-                                // onChange={this.handleChange}
-                                placeholder="多个身份证使用逗号分隔"
+                                //onChange={this.handleChange}
+                                placeholder="多个身份证可以使用逗号、封号、空格分隔"
                                 tagProps={this.getTagProps}
                                 // tagProps={getTagProps}
                                 values={values}
                             />
                         </div>
-
                         {clearButton}
-                      
                         {/* <AntButton type="primary" icon="search" size="small" onClick={
                             () => {
                                 // if (!ui.isLoad.isLoadStatus) {
@@ -650,9 +676,20 @@ class Content extends React.Component {
                         </Spin>
                     </div>
                     <div
-                        className="b-right" style={{ overflow: "hidden", height: BOTTOM_HEIGHT }}>
+                        className="b-right" style={{ overflow: "hidden", height: BOTTOM_HEIGHT}}>
                         <Row gutter={4}>
                             <Col span={16} style={{ overflowY:"hidden",overflowX:"auto" }}>
+                                    <div style={{
+                                        width:'40px',
+                                        height:BOTTOM_HEIGHT,
+                                        textAlign:"center",
+                                        fontSize:"14px",
+                                        fontWeight:"bolder",
+                                        float:"left",
+                                        boxShadow: '-6px 0 6px -4px rgba(0,0,0,.2)',
+                                        writingMode:"tb-rl"}}>
+                                        轨迹分析
+                                    </div>
                                     <HeatMap
                                         height={BOTTOM_HEIGHT}
                                         data={analyseDays}
@@ -719,7 +756,11 @@ function mapDispatchToProps(dispatch) {
         // },
         changeSameRadioFunc: (e) => {
             dispatch(Actions.changeSameRadio(e.target.value))
+        },
+        errorMessage:(msg)=>{
+            dispatch(Actions.errorMsg(msg))
         }
+
 
     }
 }
