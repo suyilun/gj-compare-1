@@ -24,9 +24,8 @@ const initFilter = () => {
     //nowTime.setMonth(nowTime.getMonth()-1);
     return {
         endTime: moment(nowTime).format('YYYY-MM-DD'),
-        startTime: moment(nowTime).add("month",-12).format('YYYY-MM-DD'),
-        userNumberArray:[],
-        userNumberStatus:[],
+        startTime: moment(nowTime).add("month",-15).format('YYYY-MM-DD'),
+        userNumberStatus:{},
         userNumber: '',
         options: TraceCard.typeOptions,
         radioValue: 'all',
@@ -120,7 +119,9 @@ function loadData(loadDataInState = {}, action) {
         case ActionTypes.DATA.DATA_REGET:
             //重新检索数据
             personDataList.map(personData => {
-                loadDataClone[personData.people.userNumber] = personData;
+                if(personData.people){
+                    loadDataClone[personData.people.userNumber] = personData;
+                }
             })
             return loadDataClone;
         default:
@@ -174,7 +175,7 @@ function chartData(chartDataInState = {}, action) {
 //--------------顶部删选--------------------
 const filterData = (filterInState = initFilter(), action) => {
     const {type}=action;
-    const {startTime,endTime,userNumber,radioValue,timeChoose,userNumberArray,userNumberStatus,optValue,optCheck}=action.payload||{};
+    const {startTime,endTime,userNumber,radioValue,timeChoose,userNumberStatus,optValue,optCheck}=action.payload||{};
     switch (type) {
         case ActionTypes.FILTER.SET_START_TIME:
             return Object.assign({}, filterInState, { startTime: action.startTime });
@@ -196,9 +197,9 @@ const filterData = (filterInState = initFilter(), action) => {
         case ActionTypes.DATA.CHANGE_TIME_SELECT:
             return Object.assign({}, filterInState, { timeChoose });
         case ActionTypes.DATA.ADD_USER_ARRAY_INPUT:
-            return Object.assign({},filterInState,{userNumberArray,userNumberStatus});
+            return Object.assign({},filterInState,{userNumberStatus});
         case ActionTypes.DATA.DEL_USER_INPUT:
-            return Object.assign({},filterInState,{userNumberArray,userNumberStatus});
+            return Object.assign({},filterInState,{userNumberStatus});
         default:
             return filterInState;
     }

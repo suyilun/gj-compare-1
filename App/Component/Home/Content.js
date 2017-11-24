@@ -23,7 +23,7 @@ import _ from 'lodash';
 // } from 'react-vis';
 // import CalendarHeatmap from 'react-calendar-heatmap';
 // import Immutable from 'immutable';
-import { Classes,Button, EditableText,Intent } from "@blueprintjs/core";
+import { Classes,Button, EditableText,Intent,Colors } from "@blueprintjs/core";
 import { TagInput } from "@blueprintjs/labs";
 import "@blueprintjs/core/dist/blueprint.css";
 import "@blueprintjs/labs/dist/blueprint-labs.css"
@@ -448,7 +448,7 @@ class Content extends React.Component {
 
     handlerUserNumbers=(inputValue)=>{
         const {data, errorMessage} = this.props;
-        const {userNumberArray}=data.filterData;
+        const {userNumberStatus}=data.filterData;
         let userNumberError=[];
         let userNumberMsgError="";
         if(inputValue===''){
@@ -471,7 +471,7 @@ class Content extends React.Component {
             errorMessage(`身份证${userNumberError.join(",")}格式有误，请重新输入！`);
             return;
         }
-        const sameUserNumbers=_.intersection(userNumbers,userNumberArray);
+        const sameUserNumbers=_.intersection(userNumbers,Object.keys(userNumberStatus));
         if(sameUserNumbers.length>0){
                 //有重复
                 errorMsg(`对不起身份证${sameUserNumbers.join(",")}已存在`);
@@ -535,7 +535,6 @@ class Content extends React.Component {
             //有用户，出现日期条
             height = height - BASELINE_HEIGHT;
         }
-
         const { timeDataArray, analyseDays } = data.desc.date_type;
         const sameDay = data.desc.sameDay;
         const sameMd5 = data.desc.sameMd5;
@@ -551,11 +550,10 @@ class Content extends React.Component {
         }).map((option) => {
             return option.value
         });
-        const { radioValue, startTime, endTime ,userNumberArray,userNumberStatus} = filterData;
-        const values=userNumberArray.map((userNumber,idx)=>{
-            if(userNumberStatus[idx]){
-                return (<b>{userNumber}</b>)
-            }
+        const { radioValue, startTime, endTime ,userNumberStatus} = filterData;
+        const userNumberKeys=Object.keys(userNumberStatus);
+        const values=userNumberKeys.map((userNumber)=>{
+                return (<b style={{color:userNumberStatus[userNumber]?Colors.W:Colors.RED2}}>{userNumber}</b>)
         });
        
         const clearButton = (
@@ -678,18 +676,23 @@ class Content extends React.Component {
                     <div
                         className="b-right" style={{ overflow: "hidden", height: BOTTOM_HEIGHT}}>
                         <Row gutter={4}>
-                            <Col span={16} style={{ overflowY:"hidden",overflowX:"auto" }}>
-                                    <div style={{
-                                        width:'40px',
+                            <Col span={1}>
+                                <div style={{
+                                        marginLeft:"10px",
+                                        paddingTop:"50px",
+                                        width:'20px',
                                         height:BOTTOM_HEIGHT,
-                                        textAlign:"center",
+                                        //textAlign:"center",
                                         fontSize:"14px",
                                         fontWeight:"bolder",
                                         float:"left",
-                                        boxShadow: '-6px 0 6px -4px rgba(0,0,0,.2)',
+                                        // boxShadow: '-6px 0 6px -4px rgba(0,0,0,.2)',
                                         writingMode:"tb-rl"}}>
                                         轨迹分析
                                     </div>
+                            </Col>
+                            <Col span={15} style={{ overflowY:"hidden",overflowX:"auto" }}>
+                                    
                                     <HeatMap
                                         height={BOTTOM_HEIGHT}
                                         data={analyseDays}

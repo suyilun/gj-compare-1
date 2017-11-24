@@ -478,7 +478,6 @@ function descDateTypeArr(getState, userNumber, userTimeTypeDataArr) {
 }
 
 
-
 function AddData(userNumber, userData) {
     return {type: ActionTypes.DATA.ADD_RECEIVE, userNumber, userData}
 }
@@ -603,13 +602,23 @@ export function changeShowChart(value) {
 //删除一个人的轨迹内容
 export function dataCancel(userNumber) {
     return function (dispatch, getState) {
+        const {userNumberStatus}=getState().data.filterData;
+        const deleteUserInputAct=deleteUserInput(getState,userNumber);
+        if(!userNumberStatus[userNumber]){
+            dispatch(
+                batchActions([
+                    deleteUserInputAct(),
+                ],'batch_dataCancel_error')
+            );
+            return ;
+        }
         const dateType = getState().data.desc.date_type;
         // const md5Arr = date_type[userNumber].map((item) => { return item.md5 });
         // const dateArr = date_type[userNumber].map((item) => { return item.time });
         const userTimeTypeDataArr = dateType[userNumber];
         //时间轴处理
         const deleteDescDateTypeArrAct=deleteDescDateTypeArr(getState,userNumber);
-        const deleteUserInputAct=deleteUserInput(getState,userNumber);
+       
         //dispatch(deleteDescDateTypeArr(getState, userNumber));
         //删除mapping
         const deleteMappingAct=deleteMapping(userNumber);
@@ -641,17 +650,13 @@ export function dataCancel(userNumber) {
 }
 
 function deleteUserInput(getState,userNumber){
-    const { userNumberArray , userNumberStatus}=getState().data.filterData;
-    let userIndex=userNumberArray.indexOf(userNumber);
+    const {userNumberStatus}=getState().data.filterData;
+    let tmpClone=_.cloneDeep(userNumberStatus)
+    delete tmpClone[userNumber]
     return  createAction(ActionTypes.DATA.DEL_USER_INPUT,
         ()=>{
             return {
-                userNumberArray:userNumberArray.filter((item,idx)=>{
-                    return idx!=userIndex;
-                }),
-                userNumberStatus:userNumberStatus.filter((item,idx)=>{
-                    return idx!=userIndex;
-                })
+                userNumberStatus: tmpClone 
             }
         });
 }
@@ -992,10 +997,12 @@ function regetContent(personDataList) {
     return {type: ActionTypes.DATA.DATA_REGET, personDataList}
 }
 
-
 export function addUserNumberArray(userNumberArray) {
     return (dispatch, getState) => {
-        const userNumberArrayInState= getState().data.filterData.userNumberArray;
+        const userNumberStatusInState= _.cloneDeep(getState().data.filterData.userNumberStatus);
+        userNumberArray.map(item=>{
+            userNumberStatusInState[item]=0;
+        })
         dispatch(batchActions([loadWatiAct()], "addUserNumberArray_loading"));
         ///fwzy/do/track/dataList
         ///json/${userNumberArray.join(",")}.json
@@ -1032,10 +1039,15 @@ export function addUserNumberArray(userNumberArray) {
                 const userNumberStatus = userNumberArray.map(userNumber => {
                     return 0;
                 });
-                personDataList.map(personData => {
+                for(var i=0;i<personDataList.length;i++){
+                    var personData=personDataList[i];
                     const userTimeTypeDataArr = [];
                     const userMapping = {};
-                    userNumberStatus[userNumberArray.indexOf(personData.people.userNumber)] = 1;
+                    if(personData.people){
+                        userNumberStatusInState[personData.people.userNumber] = 1;
+                    }else{
+                        continue;
+                    }
                     personData
                         .content
                         .map((trace, index) => {
@@ -1054,7 +1066,7 @@ export function addUserNumberArray(userNumberArray) {
                         })
                     userDateTypeMap[personData.people.userNumber] = userTimeTypeDataArr;
                     userMappingMap[personData.people.userNumber] = userMapping;
-                })
+                }
 
                 //分析 同一天数据
                 const sameDay = calculteSameDayByAddArray(getState,userDateTypeMap);
@@ -1064,8 +1076,8 @@ export function addUserNumberArray(userNumberArray) {
                 //身份证输入框数据
                 const userNumberArrayInputAct = createAction(ActionTypes.DATA.ADD_USER_ARRAY_INPUT, () => {
                     return {
-                        userNumberArray:userNumberArrayInState.concat(userNumberArray), 
-                        userNumberStatus:getState().data.filterData.userNumberStatus.concat(userNumberStatus)
+                        // userNumberArray:userNumberArrayInState.concat(userNumberArray), 
+                        userNumberStatus:userNumberStatusInState
                       };
                 });
                 //同日数据
@@ -1090,7 +1102,12 @@ export function addUserNumberArray(userNumberArray) {
                 });
 
                 const timeDataArray = calculteTimeDataArrayByAddArray(getState, userDateTypeMap, sameDay, sameMd5);
-                const userNumberSize = Object.keys(userDateTypeMap).length+userNumberArrayInState.length;
+                let userNumberSize=0;
+                Object.keys(userNumberStatusInState).map(item=>{
+                    if(userNumberStatusInState[item]){
+                        userNumberSize++;
+                    }
+                })
                  //userNumberSize   
                 const analyseDays = calculteAnalyseDays(sameDay, sameMd5, userNumberSize, timeDataArray);
                 //时间轴
