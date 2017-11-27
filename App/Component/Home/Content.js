@@ -220,7 +220,7 @@ const TraceTable = ({ loadData, timeDataArray, showTypes }) => {
 
     const columns = [{
         title: '姓名',
-        width: '10%',
+        width: '20%',
         dataIndex: 'name',
     }, {
         title: '旅馆',
@@ -501,6 +501,7 @@ class Content extends React.Component {
 
 
     componentDidMount() {
+        this.props.checkLogin();
         //const { moveTimeScroller } = this.props;
         const self = this;
         const {userNumbers}=this.props;
@@ -561,7 +562,7 @@ class Content extends React.Component {
                 className={classNames( Classes.INTENT_PRIMARY)}
                 iconName={"search"}
                 onClick={this.handlerSearch}
-            >分析</Button>
+            >添加</Button>
         );
 
         return (
@@ -604,7 +605,7 @@ class Content extends React.Component {
                                 separator={splitRegex}
                                 //onChange={this.handlerChange}
                                 //onChange={this.handleChange}
-                                placeholder="多个身份证可以使用逗号、封号、空格分隔"
+                                placeholder="多个身份证可以使用逗号、分号、空格分隔"
                                 tagProps={this.getTagProps}
                                 // tagProps={getTagProps}
                                 values={values}
@@ -676,23 +677,7 @@ class Content extends React.Component {
                     <div
                         className="b-right" style={{ overflow: "hidden", height: BOTTOM_HEIGHT}}>
                         <Row gutter={4}>
-                            <Col span={1}>
-                                <div style={{
-                                        marginLeft:"10px",
-                                        paddingTop:"50px",
-                                        width:'20px',
-                                        height:BOTTOM_HEIGHT,
-                                        //textAlign:"center",
-                                        fontSize:"14px",
-                                        fontWeight:"bolder",
-                                        float:"left",
-                                        // boxShadow: '-6px 0 6px -4px rgba(0,0,0,.2)',
-                                        writingMode:"tb-rl"}}>
-                                        轨迹分析
-                                    </div>
-                            </Col>
-                            <Col span={15} style={{ overflowY:"hidden",overflowX:"auto" }}>
-                                    
+                            <Col span={16} style={{ overflowY:"hidden",overflowX:"auto" }}> 
                                     <HeatMap
                                         height={BOTTOM_HEIGHT}
                                         data={analyseDays}
@@ -762,8 +747,10 @@ function mapDispatchToProps(dispatch) {
         },
         errorMessage:(msg)=>{
             dispatch(Actions.errorMsg(msg))
+        },
+        checkLogin:()=>{
+            dispatch(Actions.checkLogin());
         }
-
 
     }
 }

@@ -770,7 +770,8 @@ export function reGetTraces() {
         // if (userNumbers.length == 0) {     dispatch(errorMsg("当前没有需要被搜证件号码！"));
         // return; }
         //TODO:旧请求地址/fwzy/do/track/dataList /json/test.json
-        dispatch(isLoadWait(true));
+        ///fwzy/do/track/dataList
+        dispatch(batchActions([loadWatiAct()], "addUserNumberArray_loading"));
         return axios.get(`/fwzy/do/track/dataList`, {
             params: {
                 zjhms: userNumbers.join(","),
@@ -828,22 +829,40 @@ export function reGetTraces() {
                 const sameDay = calculteSameDayByReget(userDateTypeMap);
                 const sameMd5 = calculteSameMd5ByReget(userDateTypeMap);
 
-                dispatch(regetDescSameDay(sameDay));
-                dispatch(regetDescSameMd5(sameMd5));
-                //分析数据 mapping数据
-                dispatch(regetMapping(userMappingMap));
-                //分析 同md5数据
-                dispatch(regetContent(personDataList));
-                //合计
-                dispatch(regetDescSumCatg(getState, userDateTypeMap, sameDay, sameMd5));
-                dispatch(regetDescDateTypeArr(getState, userDateTypeMap, sameDay, sameMd5));
-                //数据存储
-                dispatch(isLoadWait(false));
+                const regetDescSameDayAct=regetDescSameDay(sameDay);
+                const regetDescSameMd5Act=regetDescSameMd5(sameMd5)
+                const regetMappingAct=regetMapping(userMappingMap);
+                const regetContentAct=regetContent(personDataList);
+                const regetDescSumCatgAct=regetDescSumCatg(getState, userDateTypeMap, sameDay, sameMd5);
+                const regetDescDateTypeArrAct=regetDescDateTypeArr(getState, userDateTypeMap, sameDay, sameMd5);
+
+                dispatch(batchActions([
+                    regetDescSameDay(),
+                    regetDescSameMd5Act(),
+                    regetMappingAct(),
+                    regetContentAct(),
+                    regetDescSumCatgAct(),
+                    regetDescDateTypeArrAct(),
+
+                    loadWaitFalseAct(),
+                ], 'BATCH_reGetTraces'))
+                
             })
             .catch(function (error) {
                 console.log(error);
-                dispatch(isLoadWait(false));
-                dispatch(errorMsg(error));
+                dispatch(
+                    batchActions([
+                        createAction(
+                            ActionTypes.UI.LOADWAIT, () => {
+                                return {loadStatus: false}
+                            }
+                        ),
+                        createAction(
+                            ActionTypes.DATA.ERROR_MSG,()=>{
+                                return {errorMsg:error}
+                            }
+                        )  
+                ], "ERROR_HANDLER"));
             });
 
     }
@@ -970,31 +989,31 @@ function regetDescDateTypeArr(getState, userDateTypeMap, sameDay, sameMd5) {
         .keys(userDateTypeMap)
         .length;
     const analyseDays = calculteAnalyseDays(sameDay, sameMd5, userNumberSize, timeDataArray);
-    return {type: ActionTypes.DATA.DATA_DATETYPE_REGET, userDateTypeMap, timeDataArray, analyseDays}
+    return createAction(ActionTypes.DATA.DATA_DATETYPE_REGET, ()=>{return {userDateTypeMap, timeDataArray, analyseDays};});
 }
 
 function regetMapping(userMappingMap) {
-    return {type: ActionTypes.DATA.DATA_MAPPING_REGET, userMappingMap}
+    return createAction( ActionTypes.DATA.DATA_MAPPING_REGET,()=>{return {userMappingMap}});
 }
 
 //重新检索-合计构建
 function regetDescSumCatg(getState, userDateTypeMap, sameDay, sameMd5) {
     const sumCatg = calculteSumCatgByReget(getState, userDateTypeMap, sameDay, sameMd5);
-    return {type: ActionTypes.DATA.DATA_SUMCATG_REGET, sumCatg}
+    return createAction( ActionTypes.DATA.DATA_SUMCATG_REGET, ()=>{return {sumCatg}})
 }
 //重新检索-数据映射
 function regetDescSameDay(sameDay) {
-    return {type: ActionTypes.DATA.DATA_SAMEDAY_REGET, sameDay}
+     return createAction( ActionTypes.DATA.DATA_SAMEDAY_REGET,()=>{return {sameDay}});
 }
 
 //重新检索-同md5
 function regetDescSameMd5(sameMd5) {
-    return {type: ActionTypes.DATA.DATA_SAMEMD5_REGET, sameMd5}
+    return createAction( ActionTypes.DATA.DATA_SAMEMD5_REGET, ()=>{return {sameMd5}});
 }
 
 //重新比对内容部分
 function regetContent(personDataList) {
-    return {type: ActionTypes.DATA.DATA_REGET, personDataList}
+    return createAction( ActionTypes.DATA.DATA_REGET,()=>{return { personDataList}});
 }
 
 export function addUserNumberArray(userNumberArray) {
@@ -1285,6 +1304,25 @@ const calculteTimeDataArrayByAddArray = (getState, userDateTypeMap, sameDay, sam
     return timeArrayToTimeDataArray(allTimes);
 }
 
+export function checkLogin(){
+    return (dispatcher,getState)=>{
+        axios.get(`/fwzy/do/track/checkLogin`,
+        {   params: {},
+            responseType: "json"
+        }).then(function (response) {
+            
+        }).catch(function(){
+            dispatcher(handlerNotLogin());
+        })     
+    }
+}
+
+function handlerNotLogin(){
+    return {
+        type:ActionTypes.DATA.NOT_LOGIN,
+        notLogin:true,
+    }
+}
 
 export function errorMsg(errorMsg) {
     return {type: ActionTypes.DATA.ERROR_MSG, payload:{errorMsg}}

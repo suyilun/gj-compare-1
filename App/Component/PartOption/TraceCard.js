@@ -29,7 +29,7 @@ const hotelCard = (trace, traceStyle) => {
 const trainCard = (trace, traceStyle) => {
     return (
         <div key={trace.hbaseKey} className={traceStyle}>
-            <h1>{trace.trainCode}</h1>
+            <h1>{trace.trainCode}{trace.type=='hc_dp'?"(订票)":""}</h1>
             <ul>
                 <li><span>姓名:</span><span>{trace.name}</span></li>
                 <li><span>车次:</span><span>{trace.trainDate}</span></li>

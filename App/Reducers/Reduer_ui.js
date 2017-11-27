@@ -1,4 +1,5 @@
 import ActionTypes from '../Actions/ActionTypes';
+import { notification } from 'antd';
 
 const ui = (state = initUI, action) => {
     //console.log("进入reduce-UI:",state)
@@ -7,6 +8,7 @@ const ui = (state = initUI, action) => {
         Detail: changeDetail(state.Detail, action),
         isLoad: changeLoadStatus(state.isLoad, action),
         traceWidth: initUI.traceWidth,//窗口宽度
+        notLogin:changeLogin(state.notLogin,action),
         showChart: function (showChartInState, action) {
             switch (action.type) {
                 case ActionTypes.UI.CHANGE_SHOW_CHART:
@@ -26,7 +28,24 @@ const initUI = {
     traceWidth: window.screen.availWidth - 110,
     scrollerWidth: 0,
     showChart: false,
+    notLogin:false,
 }
+
+function changeLogin(notLoginInstate,action){
+    const {type,notLogin}=action;
+    switch(type){
+        case ActionTypes.DATA.NOT_LOGIN:
+            if(notLogin){
+                notification.error({
+                    message: '访问错误',
+                    description:<b>用户登录失效，请点击<a >链接</a>跳转登录界面!</b>
+                })
+            }
+            return {notLogin};
+        default: return notLoginInstate;
+    }
+}
+
 
 /*
  初始化结束

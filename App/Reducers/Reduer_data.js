@@ -24,7 +24,7 @@ const initFilter = () => {
     //nowTime.setMonth(nowTime.getMonth()-1);
     return {
         endTime: moment(nowTime).format('YYYY-MM-DD'),
-        startTime: moment(nowTime).add("month",-15).format('YYYY-MM-DD'),
+        startTime: moment(nowTime).add("month",-17).format('YYYY-MM-DD'),
         userNumberStatus:{},
         userNumber: '',
         options: TraceCard.typeOptions,
