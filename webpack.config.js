@@ -9,7 +9,8 @@ const OpenBrowserPlugin = require('open-browser-webpack-plugin');
 const LodashModuleReplacementPlugin = require('lodash-webpack-plugin');
 const WebpackBundleSizeAnalyzerPlugin = require('webpack-bundle-size-analyzer').WebpackBundleSizeAnalyzerPlugin;
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-
+var ENV = JSON.stringify(require("./Env/env"));
+var ENVPlugin = new webpack.DefinePlugin({__ENV__: ENV});
 const config = {
     devtool: 'source-map',//编译速度会慢
     //devtool:"cheap-eval-source-map",
@@ -30,7 +31,7 @@ const config = {
     plugins: [
         new webpack.NoEmitOnErrorsPlugin(),
         //new webpack.DefinePlugin({ 'process.env.NODE_ENV': '"production"' }),
-        new webpack.DefinePlugin({ 'process.env.NODE_ENV': '"development"' }),
+        new webpack.DefinePlugin({ 'process.env.NODE_ENV': ENV.profile }),
         new webpack.optimize.OccurrenceOrderPlugin(),
         new webpack.NamedModulesPlugin(),
         new webpack.HotModuleReplacementPlugin(),
@@ -38,6 +39,7 @@ const config = {
         new HtmlWebpackPlugin({
             template: './App/index.html'
         }),
+        ENVPlugin,
         // new webpack.optimize.UglifyJsPlugin({
         //     compress: {
         //         screw_ie8: true,

@@ -21,6 +21,8 @@ export function addOption(optionName, optionClass) {
 
 const loadWatiAct=createAction(ActionTypes.UI.LOADWAIT, () => { return {loadStatus: true}});
 const loadWaitFalseAct = createAction(ActionTypes.UI.LOADWAIT, () => { return {loadStatus : false}});
+const errMsgAct=createAction( ActionTypes.DATA.ERROR_MSG,()=>{return {errorMsg:error}});
+const notLoginAct=createAction( ActionTypes.DATA.NOT_LOGIN,()=>{return {notLogin:true}});
 
 //改变选项（飞机，火车）选中状态
 export function checkOption(optValue, optCheck) {
@@ -852,16 +854,8 @@ export function reGetTraces() {
                 console.log(error);
                 dispatch(
                     batchActions([
-                        createAction(
-                            ActionTypes.UI.LOADWAIT, () => {
-                                return {loadStatus: false}
-                            }
-                        ),
-                        createAction(
-                            ActionTypes.DATA.ERROR_MSG,()=>{
-                                return {errorMsg:error}
-                            }
-                        )  
+                        loadWaitFalseAct(),
+                        errMsgAct()
                 ], "ERROR_HANDLER"));
             });
 
@@ -1025,6 +1019,7 @@ export function addUserNumberArray(userNumberArray) {
         dispatch(batchActions([loadWatiAct()], "addUserNumberArray_loading"));
         ///fwzy/do/track/dataList
         ///json/${userNumberArray.join(",")}.json
+ 
         return axios.get(`/fwzy/do/track/dataList`, {
             params: {
                 zjhms: userNumberArray.join(","),
@@ -1151,23 +1146,26 @@ export function addUserNumberArray(userNumberArray) {
                 //分析数据 mapping数据 分析 同md5数据 合计 数据存储
             })
             .catch(function (error) {
-                console.log(error);
-                dispatch(
-                    batchActions([
-                        createAction(
-                            ActionTypes.UI.LOADWAIT, () => {
-                                return {loadStatus: false}
-                            }
-                        ),
-                        createAction(
-                            ActionTypes.DATA.ERROR_MSG,()=>{
-                                return {errorMsg:error}
-                            }
-                        )  
-                ], "ERROR_HANDLER"));
+                if(isNotLoginError(error)){
+                    dispatch(
+                        batchActions([
+                            loadWaitFalseAct(),
+                           notLoginAct(),
+                    ], "NOT_LOGIN_ERROR_HANDLER"));
+
+                    //dispatch(handlerNotLogin());
+                }else{
+                    dispatch(
+                        batchActions([
+                            loadWaitFalseAct(),
+                            errMsgAct()
+                    ], "ERROR_HANDLER"));
+                }
             });
     }
 }
+
+
 
 
 
@@ -1305,24 +1303,32 @@ const calculteTimeDataArrayByAddArray = (getState, userDateTypeMap, sameDay, sam
 }
 
 export function checkLogin(){
-    return (dispatcher,getState)=>{
+    return (dispatch,getState)=>{
         axios.get(`/fwzy/do/track/checkLogin`,
         {   params: {},
             responseType: "json"
         }).then(function (response) {
             
-        }).catch(function(){
-            dispatcher(handlerNotLogin());
+        }).catch(function(error){
+            if(isNotLoginError(error)){
+                dispatch(
+                    batchActions([notLoginAct(),
+                ], "BATCH_CHECK_LOGIN"));
+            }
         })     
     }
 }
 
-function handlerNotLogin(){
-    return {
-        type:ActionTypes.DATA.NOT_LOGIN,
-        notLogin:true,
-    }
+function isNotLoginError(error){
+    return    error&&error.response&&error.response.status&&error.response.status=='401';
 }
+
+// function handlerNotLogin(){
+//     return {
+//         type:ActionTypes.DATA.NOT_LOGIN,
+//         notLogin:true,
+//     }
+// }
 
 export function errorMsg(errorMsg) {
     return {type: ActionTypes.DATA.ERROR_MSG, payload:{errorMsg}}

@@ -32,13 +32,16 @@ const initUI = {
 }
 
 function changeLogin(notLoginInstate,action){
-    const {type,notLogin}=action;
+    const {type,payload}=action;
+    const {notLogin}=payload||{};
     switch(type){
         case ActionTypes.DATA.NOT_LOGIN:
+            console.log("-----11111111-----",notLogin)
             if(notLogin){
                 notification.error({
+                    duration:null,
                     message: '访问错误',
-                    description:<b>用户登录失效，请点击<a >链接</a>跳转登录界面!</b>
+                    description:<b>用户登录失效，请点击<a href={`${__ENV__.loginPath}`}>链接</a>跳转登录界面!</b>
                 })
             }
             return {notLogin};

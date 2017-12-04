@@ -631,7 +631,6 @@ class Content extends React.Component {
                                 }
                             }}
                         /> */}
-                      
                         <Radio.Group value={radioValue} onChange={changeSameRadioFunc} style={{ marginLeft: 15 }}>
                             <Radio value={"all"}><b className="all">所有</b></Radio>
                             <Radio value={"sameDay"}><b className="sameDay">同日</b></Radio>
@@ -693,6 +692,8 @@ class Content extends React.Component {
                                         timeDataArray={timeDataArray}
                                         showTypes={showTypes}
                                     />
+
+
                             </Col>
                         </Row>
                     </div>

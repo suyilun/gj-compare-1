@@ -6,10 +6,10 @@ const PeopleShow = ({ pname, cancel, userNumber }) => (
     <li className={"userPic"}>
         <p>
             {/*<img src="images/demo_header.png"></img>*/}
-            <img src={`http://10.119.125.149:18080/big-data-interface/zhaopian/A${userNumber}`}></img>
+            <img src={`${__ENV__.picPath}${userNumber}`}></img>
             <strong>{pname}</strong>
         </p>
-        <a href={`http://10.119.125.149/do/ry?zjhm=A${userNumber}`} target="_blank">{userNumber}</a>
+        <a href={`${__ENV__.dakPath}${userNumber}`} target="_blank">{userNumber}</a>
         <i onClick={() => { cancel(userNumber) }}>
             <span className="life-tb"></span>
             <span className="life-lr"></span>

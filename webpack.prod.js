@@ -8,7 +8,8 @@ const OpenBrowserPlugin = require('open-browser-webpack-plugin');
 const LodashModuleReplacementPlugin = require('lodash-webpack-plugin');
 const WebpackBundleSizeAnalyzerPlugin = require('webpack-bundle-size-analyzer').WebpackBundleSizeAnalyzerPlugin;
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-
+var ENV = JSON.stringify(require("./Env/env"));
+var ENVPlugin = new webpack.DefinePlugin({__ENV__: ENV});
 
 const config = {
     //devtool: 'source-map',//编译速度会慢
@@ -38,6 +39,7 @@ const config = {
         }),
         new LodashModuleReplacementPlugin,
         new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /zh-cn/),
+        ENVPlugin,
         new webpack.optimize.UglifyJsPlugin({
             compress: {
                 screw_ie8: true,

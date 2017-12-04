@@ -156,8 +156,8 @@ const stayCard = (trace, traceStyle) => {
             <h1 title={trace.stayAddress}>{trace.stayAddress}</h1>
             <ul>
                 <li><span>姓名:</span><span>{trace.name}</span></li>
-                <li><span>登记:</span><span>{trace.recordTime}</span></li>
-                <li><span>到期:</span><span>{trace.dueTime}</span></li>
+                <li><span>登记:</span><span>{trace.recordDate}</span></li>
+                <li><span>到期:</span><span>{trace.dueDate}</span></li>
             </ul>
             <img src={require(`../../images/life_class/${trace.catg}_life_big.png`)}></img>
         </div>
