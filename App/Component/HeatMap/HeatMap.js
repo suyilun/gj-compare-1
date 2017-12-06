@@ -80,7 +80,6 @@ const GDayRects = ({ startDay, endDay, dataMap, classForDay, titleForDay, clickF
             countWeek = startMoment.day() + 1;
         }
         while (countWeek > 0 && startMoment.isAfter(endMoment)) {
-            console.log("GDayRects")
             const tokenDate = startMoment.format("YYYYMMDD");
             const dayData = dataMap[tokenDate];
             const tokenClass = classNames({

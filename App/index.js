@@ -9,11 +9,11 @@ import { AppContainer } from 'react-hot-loader';
 import {batchActions, enableBatching} from 'redux-batched-actions';
 
 // 利用redux-logger打印日志
-//import {createLogger} from 'redux-logger'
+import {createLogger} from 'redux-logger'
 // 安装redux-devtools-extension的可视化工具。
 //import { composeWithDevTools } from 'redux-devtools-extension'
 // 使用日志打印方法， collapsed让action折叠，看着舒服。
-//const loggerMiddleware = createLogger({collapsed: true});
+const loggerMiddleware = createLogger({collapsed: true});
 require("./app.less");
 require("./index.css");
 // require("./index.html");
@@ -37,7 +37,7 @@ const renderApp = Component => {
     ReactDOM.render(
         <Provider store={createStore(enableBatching(rootReducer), 
             window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__(),
-            applyMiddleware(thunkMiddleware))}>
+            applyMiddleware(thunkMiddleware,loggerMiddleware))}>
            <AppContainer>
             <Component />
             </AppContainer>
@@ -47,7 +47,7 @@ const renderApp = Component => {
         ReactDOM.render(
             <Provider store={createStore(enableBatching(rootReducer), 
                 window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__(),
-            applyMiddleware(thunkMiddleware))}>
+            applyMiddleware(thunkMiddleware,loggerMiddleware))}>
                 <Component />
             </Provider>,
             document.getElementById("app")
@@ -63,7 +63,6 @@ if (process.env.NODE_ENV !== "production") {
     if (module.hot) {
         module.hot.accept('./Layout/AppLayouts', () => {
             const NextAppLayout = require('./Layout/AppLayouts');
-            console.log("$$$$$$$$$$$$");
             renderApp(NextAppLayout)
         })
         //module.hot.accept();
